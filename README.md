@@ -46,5 +46,44 @@
 
 ## Μετρήσεις 
 
+Οι μετρήσεις αφορούν την εξής απλή εφαρμογή:
+```
+int main(int argc, char **argv)
+{
+    int* array[100];
+    clock_t start, end; 
+         
+    for (int i = 0; i < 50; i++)
+    {
+        for (int j = 0; j < 100; j++)
+        {
+            array[j] = new int(j);
+            
+        }
+        for (int j = 0; j < 100; j++)
+        {
+            delete array[j];
+        }
+
+    }
+    return 0;
+}
+```
+Τα αποτελέσματα που δίνει το valgrind ( ``` valgrind --tool=massif ./file ```) για το memory footprint:
+* Default MM
+
+![default_memory_footprint](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/mem_footprint_default.png)
+
+* Custom MM - First Fit Policy
+
+![ff_memory_footprint](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/mem_footprint_ff.png)
 
 
+* Custom MM - Best Fit Policy
+
+![bf_memory_footprint](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/mem_footprint_bf.png)
+
+Και για τα memory accesses (```valgrind --log-file="mem_accesses_log.txt" --tool=lackey --trace-mem=yes ./drr```):
+
+![memory_accesses](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/mem_accesses.png)
+ 
