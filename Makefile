@@ -19,4 +19,7 @@ main.o: $(MAIN).cpp mem_manager.h
 
 mem_manager.o: mem_manager.h
 
+clean:
+	rm *.o first_fit best_fit
+
 
