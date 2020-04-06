@@ -90,7 +90,7 @@ public:
     virtual ~MemoryManager();
     
 };
-/**
+/*
  * Aligns the size by the machine word.
  */
 inline size_t MemoryManager::align(size_t n)
@@ -111,7 +111,6 @@ double MemoryManager::total_fl_operations_time = 0;
 
 bool MemoryManager::setUsed(Block* block, bool value){
     if (value){
-        // set block->used = true
         cout << "tried to set to true" << endl;
         block = (Block*)((uintptr_t)(void*)block | 0x03ULL);
         return true;
@@ -174,7 +173,7 @@ MemoryManager::~MemoryManager()
         "-" << total_fl_remove_calls << "-" << total_fl_add_calls << endl;
         if (sbrk(-total_requested_memory) == (void *)-1)
         {
-            cout << "malakia egine" << endl;
+            cout << "error occured during destructor operation" << endl;
         }
 }
 
@@ -193,10 +192,9 @@ void MemoryManager::printHeap()
 
 int MemoryManager::fl_remove(Block* block)
 {
-    // cout << "in remove, remove block " << block << endl;
     total_fl_remove_calls += 1;
 	if (freeStart == nullptr){
-        cout << "free list is null, wtf dude" << endl;
+        cout << "free list is null" << endl;
         return 1;
     }
     if (freeStart == block){
@@ -225,22 +223,17 @@ int MemoryManager::fl_remove(Block* block)
 
 void MemoryManager::fl_add(Block* block){
     total_fl_add_calls += 1;
-    //cout << "adding block " << block << " to free list" << endl;
-    if(!freeStart || (unsigned long)freeStart > (unsigned long)block){   
-        // cout << "in if!" << endl;   
+    if(!freeStart || (unsigned long)freeStart > (unsigned long)block){    
         block->nextfree = freeStart;
         freeStart = block; 
     }
     else{
-        // cout << "in else!" << endl;
         Block* f = freeStart;
         Block* pos = freeStart;
         while (f->nextfree != nullptr && (unsigned long)f->nextfree < (unsigned long)block){
             pos = f->nextfree;
             f = f->nextfree;
         }
-        // if (pos == freeStart)
-        //     cout << "pos == freestart" << endl;
         block->nextfree = pos->nextfree;
         pos->nextfree = block;
     }
@@ -277,8 +270,7 @@ Block *MemoryManager::requestFromOS(size_t size)
 bool MemoryManager::canCoalesce(Block *block)
 {
     bool retval = (block->next && !block->next->used);
-    // cout << block << " - " << block->next << endl;
-    // cout << "retval is " << retval << endl;
+
     return retval;
 }
 
@@ -287,7 +279,6 @@ bool MemoryManager::canCoalesce(Block *block)
  */
 Block *MemoryManager::coalesce(Block *block)
 {
-    //Block* next_block = block->next;
     fl_remove(block->next);
     size_t new_size = block->size + block->next->size + BLOCK_SIZE - DATA_SIZE;
     block->next = block->next->next;
@@ -302,18 +293,15 @@ Block *MemoryManager::coalesce(Block *block)
 Tuple MemoryManager::split(Block *block, size_t size)
 {
     size_t new_size = align(size);
-    // cout << "new size will be " << new_size << endl;
     size_t remaining_size = block->size - new_size - BLOCK_SIZE + DATA_SIZE;
-    //cout << "remaining size " << remaining_size << endl;
+
     if (align(remaining_size) + BLOCK_SIZE - DATA_SIZE + new_size == block->size)
     {
         remaining_size = align(remaining_size);
-        // cout << "remaining size aligned(if - supposedly same) " << remaining_size << endl;
     }
     else
-    { // if ((size_t)(align(remaining_size) - sizeof(word_t)) >= sizeof(word_t))
+    { 
         remaining_size = align(remaining_size) - sizeof(word_t);
-        // cout << "remaining size aligned(else - supposedly one word less" << remaining_size << endl;
     }
     Block *newblock = (Block*)((unsigned long)block + (unsigned long)new_size + (unsigned long)BLOCK_SIZE - (unsigned long)DATA_SIZE);
     // fl_remove(block); this is done in splitAllocate
@@ -323,7 +311,7 @@ Tuple MemoryManager::split(Block *block, size_t size)
     block->next = newblock;
     block->size = new_size;
     newblock->nextfree = nullptr;
-    fl_remove(block);
+    fl_remove(block);F
     block->used = true;
     fl_add(newblock);
     return {block, newblock};
@@ -336,57 +324,45 @@ inline bool MemoryManager::canSplit(Block *block, size_t size)
 {
     bool can = false;
     size_t new_size = align(size);
-    // cout << "new size " << new_size << endl;
     int remaining_size = (int)block->size - (int)new_size - (int)BLOCK_SIZE + (int)DATA_SIZE;
-    // cout << "remaining size " << remaining_size << endl;
     if (remaining_size <= 0)
         return false;
     if (align(remaining_size) + BLOCK_SIZE - DATA_SIZE + new_size == block->size)
     {
         can = true;
-        // cout << "case 1" << endl;
     }
     else if ((size_t)(align(remaining_size) - sizeof(word_t)) >= sizeof(word_t))
     {
         can = true;
-        // cout << "case 2" << endl;
     }
     else
     {
         can = false;
-        // cout << "casee 3 - false" << endl;
     }
     return can;
 }
 
 Block *MemoryManager::splitAllocate(Block *block, size_t size)
 {
-    // cout << "in splitAllocate! " << endl;
     if (canSplit(block, size))
     {
         auto tuple = split(block, size);
         block = tuple.block_size;
-        // cout << "remaining block address " << tuple.block_remaining << endl;
     }
     if(!block->used){
         fl_remove(block);
         block->used = true;
     }
-    // cout << "split block address " << block << endl;
     
     return {block};
 }
 
 Block *MemoryManager::firstFit(size_t size)
 {
-    // cout << "in first fit" << endl;
-    //Block *block = heapStart;
     Block* block = freeStart;
-    // (freeStart)?(block = freeStart):(block = heapStart);
     
     while (block != nullptr)
     {
-        // O(n) search.
         if (block->used || block->size < size)
         {
             block = block->nextfree;
@@ -397,7 +373,6 @@ Block *MemoryManager::firstFit(size_t size)
         return block;
         // fl_remove(block); splitAllocate will do that
     }
-    // cout << "first fit found arxidia" << endl;
     return nullptr;
 }
 
@@ -452,7 +427,6 @@ Block *MemoryManager::findBlock(size_t size)
         auto block = firstFit(size);
         if (block)
             return splitAllocate(block, size);
-        // return firstFit(size);
         else
             return nullptr;
         break;
@@ -462,7 +436,6 @@ Block *MemoryManager::findBlock(size_t size)
         auto block = bestFit(size);
         if (block)
             return splitAllocate(block, size);
-        // return firstFit(size);
         else
             return nullptr;
         break;
@@ -511,17 +484,14 @@ word_t *MemoryManager::alloc(size_t size)
 /* get block metadata fron its data start address*/
 Block *MemoryManager::getHeader(word_t *data)
 {
-    // cout << "got header alright" << endl;
     return (Block *)((char *)data + DATA_SIZE - BLOCK_SIZE);
 }
 
 void MemoryManager::free(word_t *data)
 {
     auto block = getHeader(data);
-    // cout << "block: " << block << endl;
     if (canCoalesce(getHeader(data)))
     {
-        // cout << "got in if... shouldn't have" << endl;
         block = coalesce(block);
     }
     fl_add(block);
@@ -531,7 +501,6 @@ void MemoryManager::free(word_t *data)
 static MemoryManager gmm;
 
 void* operator new(size_t size){
-    // cout << "calling overloaded NEW operator" << endl;
     return gmm.alloc(size);
 }
 
@@ -540,7 +509,6 @@ void* operator new[] (size_t size){
 }
 
 void operator delete(void * p){
-    // cout << "calling overloaded DELETE operator" << endl;
     return gmm.free((word_t*)p);
 }
 
