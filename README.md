@@ -88,4 +88,9 @@ int main(int argc, char **argv)
 Και για τα memory accesses (```valgrind --log-file="mem_accesses_log.txt" --tool=lackey --trace-mem=yes ./drr```):
 
 ![memory_accesses](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/mem_accesses.png)
+
+Στην παραπάνω εφαρμογή δεν χρησιμοποιείται καθόλου ούτε το block coalescing ούτε το block splitting, γιατί η σειρά με την οποία γίνονται οι δεσμεύσεις και οι αποδεσμεύσεις μνήμης δεν το επιτρέπουν.
+Αν στον παραπάνω κώδικα αλλάξουμε τη σειρά με την οποία απελευθερώνεται η μνήμη, τότε η επίδοση βελτιώνεται πολύ καθώς αξιοποιούνται οι μηχανισμοί αυτοί. Ο αριθμός των προσβάσεων στη μνήμη μειώνεται πολύ και πλέον ανήκει στην ίδια τάξη μεγέθους με αυτόν του default MM. Το memory footprint δεν αλλάζει. Οι χρόνοι εκτέλεσης επίσης μειώνονται δραματικά (αν και πάλι είναι περίπου τριπλάσιοι από αυτούς του default MM).
+
+
  
