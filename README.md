@@ -103,6 +103,159 @@ int main(int argc, char **argv)
 |![execution_time](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/times_slow.png) | ![execution_time](https://github.com/konskov/Memory-Manager/blob/master/screens_mm/times_reversed.png) |
 
 
+Για τη μελέτη διαχείρησης των blocks χρησιμοποιήθηκε το παρακάτω πρόγραμμα:
+
+```
+struct Stuffing {
+    double some_stuffing ;
+    double even_more_stuffing;
+    long long int stuffing_for_ages;
+    long int one_to_stuff_them_all;
+};
+
+
+int main(int argc, char **argv)
+{
+    int* array[10];
+    Stuffing* Some_block[10];
+    
+        for (int j = 0; j < 4; j++)
+        {
+            cout << j+1 << " new int" << endl << endl;
+            array[j] = new int(j); 
+        }
+        
+        for (int j = 0; j < 1; j++)
+        {
+            cout << j+1 << " new struct" << endl << endl ;
+            
+            Some_block[j] = new Stuffing();
+        }
+        
+        for (int j = 0; j < 4; j++)
+        {
+            cout << j+1 << " delete int" << endl << endl;
+            delete array[3-j];
+        }
+
+        for (int j = 0; j < 1; j++)
+        {
+            cout << j+1 << " new struct" << endl << endl ;
+            
+            Some_block[j] = new Stuffing();
+        }
+    return 0;
+}
+```
+
+Και η έξοδος μετρήθηκε ως εξής:
+
+```
+calling mem manager constructor
+1 new int
+
+Total Memory Blocks Available
+7952 : 8 , 1    
+heapSize 1
+
+Free Memory Blocks Available
+
+freeSize 0
+
+2 new int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    
+heapSize 2
+
+Free Memory Blocks Available
+
+freeSize 0
+
+3 new int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    8032 : 8 , 1    
+heapSize 3
+
+Free Memory Blocks Available
+
+freeSize 0
+
+4 new int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    8032 : 8 , 1    8072 : 8 , 1    
+heapSize 4
+
+Free Memory Blocks Available
+
+freeSize 0
+
+1 new struct
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    8032 : 8 , 1    8072 : 8 , 1    8112 : 32 , 1    
+heapSize 5
+
+Free Memory Blocks Available
+
+freeSize 0
+
+1 delete int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    8032 : 8 , 1    8072 : 8 , 0    8112 : 32 , 1    
+heapSize 5
+
+Free Memory Blocks Available
+8072: 8,0 
+freeSize 1
+
+2 delete int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 8 , 1    8032 : 48 , 0    8112 : 32 , 1    
+heapSize 4
+
+Free Memory Blocks Available
+8032: 48,0 
+freeSize 1
+
+3 delete int
+
+Total Memory Blocks Available
+7952 : 8 , 1    7992 : 88 , 0    8112 : 32 , 1    
+heapSize 3
+
+Free Memory Blocks Available
+7992: 88,0 
+freeSize 1
+
+4 delete int
+
+Total Memory Blocks Available
+7952 : 128 , 0    8112 : 32 , 1    
+heapSize 2
+
+Free Memory Blocks Available
+7952: 128,0 
+freeSize 1
+
+1 new struct
+
+Total Memory Blocks Available
+7952 : 32 , 1    8016 : 64 , 0    8112 : 32 , 1    
+heapSize 3
+
+Free Memory Blocks Available
+8016: 64,0 
+freeSize 1
+
+calling mem manager destructor
+heapsize - total_remove - total_add 3-4-5
+```
+Μπορούμε να παρατηρήσουμε πώς γίνεται η δέσμευση και απελευθέρωση των blocks ( 0 = ελεύθερο, 1 = δεσμευμένο ), καθώς και το μέγεθος τους σε bytes. Βλέπουμε επίσης, πώς με χρήση coalesce και splitting μπορούμε να αποθηκεύσουμε το μεγαλύτερου μεγέθους struct, εκμεταλλευόμενοι ακριβώς όσο χώρο χρειαζόμαστε, αντί να αφήνουμε τα blocks που περιείχαν int αχρησιμοποίητα.
 
 
 
